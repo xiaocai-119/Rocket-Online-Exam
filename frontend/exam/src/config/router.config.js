@@ -108,6 +108,23 @@ export const asyncRouterMap = [
           }
         ]
       },
+      // 错题本
+      {
+        path: '/exam-error-question',
+        name: 'exam-error-question',
+        redirect: '/list/exam-error-question',
+        component: PageView,
+        hideChildrenInMenu: true,
+        meta: { title: '错题题集', keepAlive: true, icon: mine, permission: ['exam-error-question'] },
+        children: [
+          {
+            path: '/list/exam-error-question',
+            name: 'StudentRecordListWrapper',
+            component: () => import('../views/list/ExamErrorQuestion'),
+            meta: { title: '', keepAlive: false, permission: ['exam-error-question'] }
+          }
+        ]
+      },
       // account
       {
         path: '/account',

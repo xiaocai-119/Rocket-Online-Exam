@@ -4,7 +4,7 @@
       :grid="{gutter: 24, lg: 3, md: 2, sm: 1, xs: 1}"
       :dataSource="dataSource"
     >
-      <a-list-item slot="renderItem" slot-scope="item">
+      <a-list-item slot="renderItem" slot-scope="item" v-if="item.flag==0">
         <a-card :hoverable="true" @click="joinExam(item.id)">
           <a-card-meta>
             <div style="margin-bottom: 3px" slot="title">{{ item.title }}</div>
@@ -38,6 +38,7 @@ export default {
   },
   methods: {
     joinExam (id) {
+      console.log('准备进入考试')
       FinishExam(id, this.answersMap)
         .then(res => {
           if (res.code === 0) {

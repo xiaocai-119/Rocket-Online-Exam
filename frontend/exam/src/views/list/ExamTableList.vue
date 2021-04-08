@@ -76,7 +76,6 @@
     <create-form ref="createModal" @ok="handleOk"/>
     <!-- ref是为了方便用this.$refs.modal直接引用，上同 -->
     <step-by-step-exam-modal ref="createExamModal" @ok="handleOk"/>
-    <question-view-modal ref="modalView" @ok="handleOk"/>
     <question-edit-modal ref="modalEdit" @ok="handleOk"/>
   </a-card>
 </template>
@@ -84,7 +83,6 @@
 <script>
 import moment from 'moment'
 import { STable } from '../../components'
-import QuestionViewModal from './modules/QuestionViewModal'
 import QuestionEditModal from './modules/QuestionEditModal'
 import CreateForm from './modules/CreateForm'
 import { getExamList } from '../../api/exam'
@@ -97,7 +95,6 @@ export default {
     StepByStepExamModal,
     STable,
     CreateForm,
-    QuestionViewModal,
     QuestionEditModal
   },
   data () {
@@ -206,7 +203,7 @@ export default {
     handleEdit (record) {
       // Todo:修改考试信息和下面的题目，弹出一个可修改的输入框，实际上复用创建题目的模态框即可，还没做完
       console.log(record)
-      this.$refs.modalEdit.edit(record)
+      this.$refs.createExamModal.update(record)
     },
     handleSub (record) {
       // 查看题目，不在模态框里查啦，太麻烦

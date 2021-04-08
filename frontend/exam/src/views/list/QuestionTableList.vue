@@ -67,8 +67,6 @@
 
       <span slot="action" slot-scope="text, record">
         <template>
-          <a @click="handleSub(record)">详情</a>
-          <a-divider type="vertical"/>
           <a @click="handleEdit(record)">编辑</a>
         </template>
       </span>
@@ -77,7 +75,6 @@
     <create-form ref="createModal" @ok="handleOk"/>
     <!-- ref是为了方便用this.$refs.modal直接引用，上同 -->
     <step-by-step-question-modal ref="createQuestionModal" @ok="handleOk"/>
-    <question-view-modal ref="modalView" @ok="handleOk"/>
     <question-edit-modal ref="modalEdit" @ok="handleOk"/>
   </a-card>
 </template>
@@ -215,11 +212,6 @@ export default {
       // 弹出一个可修改的输入框
       console.log(record)
       this.$refs.modalEdit.edit(record)
-    },
-    handleSub (record) {
-      // 查看题目
-      console.log(record)
-      this.$refs.modalView.edit(record)
     },
     handleOk () {
       this.$refs.table.refresh()

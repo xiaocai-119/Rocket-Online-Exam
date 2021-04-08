@@ -3,9 +3,9 @@
 import api from './index'
 import { axios } from '../utils/request'
 
-export function getQuestionList (parameter) {
+export function getQuestionList (parameter, userId) {
   return axios({
-    url: api.ExamQuestionList,
+    url: api.ExamQuestionList + '?userId=' + userId,
     method: 'get',
     params: parameter
   })

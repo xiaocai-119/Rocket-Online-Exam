@@ -1,6 +1,6 @@
 <template>
   <a-modal
-    title="编辑题目"
+    title="错题题集"
     :width="640"
     :visible="visible"
     :confirmLoading="confirmLoading"
@@ -13,14 +13,16 @@
           <a-input type="textarea" v-model="question.name"/>
         </h3>
         <ul v-show="question.type==='多选题'">
-          <li v-for="option in question.options" :key="option.id">
-            <a-input v-model="option.content"/>
+          <li v-for="option in question.options" :key="option.id" >
+            <a-input v-if="!showUserAnswer(option.id)" v-model="option.content"/>
+            <a-input v-if="showUserAnswer(option.id)" v-model="option.content" style="background-color: red"/>
           </li>
         </ul>
 
         <ul v-show="question.type!=='多选题'">
           <li v-for="option in question.options" :key="option.id">
-            <a-input v-model="option.content"/>
+            <a-input v-if="option.id!= userAnswerId" v-model="option.content" />
+            <a-input v-if="option.id == userAnswerId" v-model="option.content" style="background-color: red"/>
           </li>
         </ul>
 
@@ -62,7 +64,7 @@
     </a-spin>
     <template slot="footer">
       <a-button key="cancel" @click="handleCancel">关闭</a-button>
-      <a-button key="update" type="primary" @click="handleUpdate">更新</a-button>
+      <a-button key="update" type="primary" @click="handleUpdate" :style="{ display: visiable }">更新</a-button>
     </template>
   </a-modal>
 </template>
@@ -79,8 +81,11 @@ export default {
       visible: false,
       size: 'default',
       confirmLoading: false,
-
+      visiable: '',
       form: this.$form.createForm(this),
+      // 考生的答案
+      userAnswerId: '',
+      userAnswerIds: [],
       // 每个问题
       question: {},
       // 单选和判断题的答案
@@ -100,7 +105,6 @@ export default {
       // 上来先把之前的清理干净
       this.answerOptionId = ''
       this.answerOptionIds = []
-      this.visible = true
       // 把当前的记录赋值到data中的变量
       this.question = record
       // 单选题的处理情况,设置默认值
@@ -113,7 +117,30 @@ export default {
         }
       }
     },
-
+    look (record, data) {
+      console.log(record)
+      console.log(data)
+      this.visiable = 'none'
+      // 上来先把之前的清理干净
+      this.answerOptionId = ''
+      this.answerOptionIds = []
+      this.visible = true
+      // 把当前的记录赋值到data中的变量
+      this.question = record
+      // 单选题的处理情况,设置默认值
+      for (let i = 0; i < this.question.options.length; i++) {
+        if (this.question.options[i].answer === true) {
+          // 设置单选题或者判断题答案
+          this.answerOptionId = this.question.options[i].id
+          // 设置多选题的答案
+          this.answerOptionIds.push(this.question.options[i].id)
+        }
+      }
+      this.userAnswerId = data
+      this.userAnswerIds = data.split('-')
+      console.log(this.userAnswerId)
+      console.log(this.userAnswerIds)
+    },
     handleCancel () {
       // clear form & currentStep
       this.visible = false
@@ -163,7 +190,14 @@ export default {
     popupScroll () {
       console.log('popupScroll')
     },
-
+    showUserAnswer (id) {
+      for (var i = 0; i < this.userAnswerIds.length; i++) {
+        if (id === this.userAnswerIds[i]) {
+          return true
+        }
+      }
+      return false
+    },
     handleUpdate () {
       // 把data中的question属性提交到后端，待写完后端接口
       questionUpdate(this.question).then(res => {

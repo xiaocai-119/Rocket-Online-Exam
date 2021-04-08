@@ -105,6 +105,7 @@
               style="width: 100%"
               @popupScroll="popupScroll"
               @change="handleRadioChange"
+              v-decorator="['radioSelect',{rules: [{ required: false}]}]"
             >
               <a-select-option v-for="radio in radios" :value="radio.name" :key="radio.id">
                 {{ radio.name }}
@@ -118,7 +119,7 @@
             :wrapperCol="wrapperCol"
             enterButton="Search"
           >
-            <!-- 单选 -->
+            <!-- 多选 -->
             <a-select
               mode="multiple"
               :size="size"
@@ -126,6 +127,7 @@
               style="width: 100%"
               @popupScroll="popupScroll"
               @change="handleCheckChange"
+              v-decorator="['checksSelect',{rules: [{ required: false}]}]"
             >
               <a-select-option v-for="check in checks" :value="check.name" :key="check.id">
                 {{ check.name }}
@@ -139,7 +141,7 @@
             :wrapperCol="wrapperCol"
             enterButton="Search"
           >
-            <!-- 单选 -->
+            <!-- 判断 -->
             <a-select
               mode="multiple"
               :size="size"
@@ -147,6 +149,7 @@
               style="width: 100%"
               @popupScroll="popupScroll"
               @change="handleJudgeChange"
+              v-decorator="['judgeSelect',{rules: [{ required: false}]}]"
             >
               <a-select-option v-for="judge in judges" :value="judge.name" :key="judge.id">
                 {{ judge.name }}
@@ -200,7 +203,9 @@ export default {
       // 多选题对象列表
       checks: [],
       // 判断题对象列表
-      judges: []
+      judges: [],
+      // 记录
+      record: {}
     }
   },
   methods: {
@@ -214,6 +219,53 @@ export default {
           this.radios = res.data.radios
           this.checks = res.data.checks
           this.judges = res.data.judges
+        } else {
+          this.$notification.error({
+            message: '获取问题列表失败',
+            description: res.msg
+          })
+        }
+      }).catch(err => {
+        // 失败就弹出警告消息
+        this.$notification.error({
+          message: '获取问题列表失败',
+          description: err.message
+        })
+      })
+    },
+    update (record) {
+      this.record = record
+      this.visible = true
+      // 从后端数据获取单选题、多选题和判断题的列表
+      getExamQuestionTypeList().then(res => {
+        console.log(res)
+        console.log(record)
+        if (res.code === 0) {
+          console.log(res.data)
+          this.radios = res.data.radios
+          this.checks = res.data.checks
+          this.judges = res.data.judges
+
+          var radioInit = []
+          for (var i = 0; i < record.radios.length; i++) {
+            radioInit[i] = record.radios[i].name
+          }
+          var checksInit = []
+          for (i = 0; i < record.checks.length; i++) {
+            checksInit[i] = record.checks[i].name
+          }
+          var judgeInit = []
+          for (i = 0; i < record.judges.length; i++) {
+            judgeInit[i] = record.judges[i].name
+          }
+          this.form.setFieldsValue({ 'radioSelect': radioInit })
+          this.handleRadioChange(radioInit)
+          this.form.setFieldsValue({ 'checksSelect': checksInit })
+          this.handleCheckChange(checksInit)
+          this.form.setFieldsValue({ 'judgeSelect': judgeInit })
+          this.handleJudgeChange(judgeInit)
+          this.form.setFieldsValue({ 'name': record.name, 'elapse': record.elapse, 'desc': record.desc, 'avatar': record.avatar })
+          this.form.setFieldsValue({ 'radioScore': record.radioScore, 'checkScore': record.checkScore, 'judgeScore': record.judgeScore })
         } else {
           this.$notification.error({
             message: '获取问题列表失败',
@@ -253,6 +305,16 @@ export default {
         values.radios = this.radios
         values.checks = this.checks
         values.judges = this.judges
+
+        var msg = '创建成功'
+        var id = ''
+        console.log(this.radios)
+        console.log(this.form.getFieldValue('radioSelect'))
+        if (this.record.id !== null || this.record.id !== undefined) {
+          id = this.record.id
+          msg = '更改成功'
+        }
+        values.id = id
         this.confirmLoading = false
         if (!errors) {
           // 在这里把创建的考试的内容(存放在values中)提交给后端接口，需要的参数都已经封装成values这个json啦
@@ -263,8 +325,8 @@ export default {
             console.log(res)
             if (res.code === 0) {
               this.$notification.success({
-                message: '创建成功',
-                description: '考试创建成功'
+                message: msg,
+                description: msg
               })
               // 关闭弹出框
               this.visible = false
