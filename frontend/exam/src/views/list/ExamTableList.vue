@@ -1,28 +1,22 @@
 <template>
   <a-card :bordered="false">
     <div class="table-page-search-wrapper">
-      <a-form layout="inline">
+      <a-form layout="inline" style="margin-left: 200px" :form="form">
         <a-row :gutter="48">
-          <a-col :md="8" :sm="24">
-            <a-form-item label="规则编号">
-              <a-input v-model="queryParam.id" placeholder=""/>
-            </a-form-item>
-          </a-col>
-          <a-col :md="8" :sm="24">
-            <a-form-item label="使用状态">
-              <a-select v-model="queryParam.status" placeholder="请选择" default-value="0">
-                <a-select-option value="0">全部</a-select-option>
-                <a-select-option value="1">关闭</a-select-option>
-                <a-select-option value="2">运行中</a-select-option>
-              </a-select>
+          <a-col :md="10" :sm="100">
+            <a-form-item label="名称">
+              <a-input
+                type="text"
+                v-decorator="['info', {rules: [{ required: false}], validateTrigger: 'blur'}]"
+              >
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :md=" 8 || 24" :sm="24">
             <span
               class="table-page-search-submitButtons"
               :style="{ float: 'right', overflow: 'hidden' } || {} ">
-              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-              <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
+              <a-button type="primary" @click="findByInfo">查询</a-button>
             </span>
           </a-col>
         </a-row>
@@ -30,25 +24,7 @@
     </div>
 
     <div class="table-operator">
-      <a-button type="primary" icon="plus" @click="$refs.createExamModal.create()">新建</a-button>
-      <a-button type="dashed" @click="tableOption">{{ optionAlertShow && '关闭' || '开启' }} alert</a-button>
-      <a-dropdown v-action:edit v-if="selectedRowKeys.length > 0">
-        <a-menu slot="overlay">
-          <a-menu-item key="1">
-            <a-icon type="delete"/>
-            删除
-          </a-menu-item>
-          <!-- lock | unlock -->
-          <a-menu-item key="2">
-            <a-icon type="lock"/>
-            锁定
-          </a-menu-item>
-        </a-menu>
-        <a-button style="margin-left: 8px">
-          批量操作
-          <a-icon type="down"/>
-        </a-button>
-      </a-dropdown>
+      <a-button type="primary" icon="plus" @click="createExamOne">新建</a-button>
     </div>
 
     <s-table
@@ -57,8 +33,6 @@
       rowKey="key"
       :columns="columns"
       :data="loadData"
-      :alert="options.alert"
-      :rowSelection="options.rowSelection"
     >
       <span slot="serial" slot-scope="text, record, index">
         {{ index + 1 }}
@@ -69,6 +43,8 @@
           <a @click="handleSub(record)">详情</a>
           <a-divider type="vertical"/>
           <a @click="handleEdit(record)">编辑</a>
+          <a-divider type="vertical"/>
+          <a @click="handleDelete(record)">删除</a>
         </template>
       </span>
 
@@ -83,9 +59,9 @@
 <script>
 import moment from 'moment'
 import { STable } from '../../components'
-import QuestionEditModal from './modules/QuestionEditModal'
+import QuestionEditModal from './modules/ErrorQuestionEditModal'
 import CreateForm from './modules/CreateForm'
-import { getExamList } from '../../api/exam'
+import { getExamList, deleteExamById } from '../../api/exam'
 import StepByStepExamModal from './modules/StepByStepExamModal'
 import userInfo from '../../store/modules/user'
 
@@ -97,9 +73,13 @@ export default {
     CreateForm,
     QuestionEditModal
   },
+  inject: ['reload'],
   data () {
     return {
+      form: this.$form.createForm(this),
       mdl: {},
+      flag: false,
+      name: '',
       // 查询参数
       queryParam: {},
       // 表头
@@ -111,7 +91,7 @@ export default {
         {
           title: '名称',
           dataIndex: 'name',
-          width: 250
+          width: 200
         },
         {
           title: '总分数',
@@ -132,16 +112,23 @@ export default {
         {
           title: '操作',
           dataIndex: 'action',
-          width: '150px',
+          width: '200px',
           scopedSlots: { customRender: 'action' }
         }
       ],
       // 取parameter变量，当变化时，自动重新请求后端数据。加载数据方法 必须为 Promise 对象
       loadData: parameter => {
         // 从表格组件中获取分页参数
+        this.queryParam.pageNo = parameter.pageNo
+        if (this.flag) {
+          this.queryParam.pageNo = 1
+        }
+        this.queryParam.pageSize = parameter.pageSize
+        this.queryParam.info = this.name
+        // 从表格组件中获取分页参数
         console.log('loadData.parameter', parameter)
         // 给queryParam赋值，然后把queryParam传给后端,待数据验证
-        return getExamList(Object.assign(parameter, this.queryParam), userInfo.state.id)
+        return getExamList(this.queryParam, userInfo.state.id)
           .then(res => {
             if (res.code === 0) {
               return res.data
@@ -176,6 +163,30 @@ export default {
     this.tableOption()
   },
   methods: {
+    createExamOne () {
+      this.$refs.createExamModal.create()
+    },
+    findByInfo () {
+      console.log(this.form.getFieldValue('info'))
+      this.name = this.form.getFieldValue('info')
+      this.flag = true
+      if (this.form.getFieldValue('info') === undefined) {
+        this.name = ''
+      }
+      console.log(this.loadData(this.queryParam))
+      const a = Promise.resolve(this.loadData(this.queryParam))
+      const that = this
+      a.then(function (result) {
+        that.$refs.table.localDataSource = result.data
+        that.$refs.table.localPagination = {
+          current: 1,
+          pageSize: 10,
+          showSizeChanger: true,
+          total: result.totalCount
+        }
+        that.flag = false
+      })
+    },
     tableOption () {
       if (!this.optionAlertShow) {
         this.options = {
@@ -201,9 +212,29 @@ export default {
     },
 
     handleEdit (record) {
-      // Todo:修改考试信息和下面的题目，弹出一个可修改的输入框，实际上复用创建题目的模态框即可，还没做完
       console.log(record)
       this.$refs.createExamModal.update(record)
+    },
+    handleDelete (record) {
+      const that = this
+      if (new Date(record.startDate).getTime() < new Date().getTime() && new Date(record.endDate).getTime() > new Date().getTime()) {
+        this.$notification.error({
+          message: '无法删除',
+          description: '考试已开始了'
+        })
+        return
+      }
+      this.$confirm({
+        title: '是否删除该考试？',
+        content: '',
+        okText: '确认',
+        cancelText: '取消',
+        onOk () {
+          console.log(record)
+          deleteExamById(record.id)
+          that.reload()
+        }
+      })
     },
     handleSub (record) {
       // 查看题目，不在模态框里查啦，太麻烦

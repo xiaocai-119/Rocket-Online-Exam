@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 拦截器配置
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-22 08:21
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.config;
 

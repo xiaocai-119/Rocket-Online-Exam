@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 用户信息的前端展示类
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-26 12:59
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.vo;
 

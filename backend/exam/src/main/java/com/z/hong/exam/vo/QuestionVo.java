@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 考试问题的对外封装类
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-28 08:17
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.vo;
 

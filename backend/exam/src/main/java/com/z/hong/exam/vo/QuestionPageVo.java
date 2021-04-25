@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 问题列表反馈给前端的对象
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-28 22:09
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.vo;
 

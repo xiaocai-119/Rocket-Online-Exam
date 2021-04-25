@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 用户服务
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-17 08:03
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.service.impl;
 
@@ -23,6 +21,7 @@ import com.z.hong.exam.repository.UserRepository;
 import com.z.hong.exam.service.UserService;
 import com.z.hong.exam.utils.JwtUtils;
 import com.z.hong.exam.vo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +31,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Value("${user.default.username}")
     private String defaultUsername;
 
-
+    //注册
     @Override
     public User register(RegisterDTO registerDTO) {
         try {
@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
             user.setUserNickname(user.getUserUsername());
             // 这里还需要进行加密处理，后续解密用Base64.decode()
             user.setUserPassword(Base64.encode(registerDTO.getPassword()));
-            // 默认设置为学生身份，需要老师和学生身份地话需要管理员修改
+            // 默认设置为学生身份.
             user.setUserRoleId(RoleEnum.STUDENT.getId());
             // 设置头像图片地址, 先默认一个地址，后面用户可以自己再改
             user.setUserAvatar(defaultAvatar);
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
             // 需要验证手机号是否已经存在：数据字段已经设置unique了，失败会异常地
             user.setUserPhone(registerDTO.getMobile());
             userRepository.save(user);
-            System.out.println(user);
+            log.info(user.toString());
             return user;
         } catch (Exception e) {
             e.printStackTrace(); // 用户已经存在
@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
             return null;
         }
     }
-
+    //登录
     @Override
     public String login(LoginQo loginQo) {
         User user;
@@ -102,8 +102,7 @@ public class UserServiceImpl implements UserService {
             String passwordDb = Base64.decodeStr(user.getUserPassword());
             // 用户请求参数中的密码
             String passwordQo = loginQo.getPassword();
-            System.out.println(passwordDb);
-            System.out.println(passwordQo);
+            log.info(passwordQo);
             if (passwordQo.equals(passwordDb)) {
                 // 如果密码相等地话说明认证成功,返回生成的token，有效期为一天
                 return JwtUtils.genJsonWebToken(user);

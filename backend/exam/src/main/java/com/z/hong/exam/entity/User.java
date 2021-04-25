@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 用户表
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019/5/14 07:49
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.entity;
 

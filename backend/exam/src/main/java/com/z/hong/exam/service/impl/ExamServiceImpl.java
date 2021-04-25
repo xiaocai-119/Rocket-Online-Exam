@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 考试服务接口实现
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-28 08:06
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.service.impl;
 
@@ -13,12 +11,10 @@ import com.z.hong.exam.enums.QuestionEnum;
 import com.z.hong.exam.repository.*;
 import com.z.hong.exam.service.ExamService;
 import com.z.hong.exam.vo.*;
-import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,7 +34,6 @@ public class ExamServiceImpl implements ExamService {
 
     private final QuestionRepository questionRepository;
 
-    private final TeacherStudentRepository teacherStudentRepository;
 
     private final UserRepository userRepository;
 
@@ -52,9 +47,8 @@ public class ExamServiceImpl implements ExamService {
 
     private final Logger log=LoggerFactory.getLogger(ExamServiceImpl.class);
 
-    public ExamServiceImpl(QuestionRepository questionRepository, TeacherStudentRepository teacherStudentRepository, UserRepository userRepository, QuestionLevelRepository questionLevelRepository, QuestionTypeRepository questionTypeRepository, QuestionCategoryRepository questionCategoryRepository, QuestionOptionRepository questionOptionRepository, ExamRepository examRepository, ExamRecordRepository examRecordRepository) {
+    public ExamServiceImpl(QuestionRepository questionRepository, UserRepository userRepository, QuestionLevelRepository questionLevelRepository, QuestionTypeRepository questionTypeRepository, QuestionCategoryRepository questionCategoryRepository, QuestionOptionRepository questionOptionRepository, ExamRepository examRepository, ExamRecordRepository examRecordRepository) {
         this.questionRepository = questionRepository;
-        this.teacherStudentRepository = teacherStudentRepository;
         this.userRepository = userRepository;
         this.questionLevelRepository = questionLevelRepository;
         this.questionTypeRepository = questionTypeRepository;
@@ -71,14 +65,13 @@ public class ExamServiceImpl implements ExamService {
      * @return 页面对象
      */
     @Override
-    public UserPageVo getStudentList(Integer pageNo, Integer pageSize,String tId) {
-        String[] arr=new String[]{tId};
-        List<TeacherStudent> students = teacherStudentRepository.findAllById(Arrays.asList(arr));
-        String[] student=new String[students.size()];
-        for(int i=0;i<students.size();i++){
-            student[i]=students.get(i).getStudentId();
+    public UserPageVo getStudentList(Integer pageNo, Integer pageSize, String info) {
+        List<User> users = null;
+        if(StringUtils.isBlank(info)) {
+            users = userRepository.findAllByUserRoleId(3);
+        }else{
+            users = userRepository.findByUserName(info);
         }
-        List<User> users = userRepository.findAllById(Arrays.asList(student));
         log.info("教师下的学生"+users.toString());
         UserPageVo userPageVo=new UserPageVo();
         // 设置页码
@@ -100,9 +93,86 @@ public class ExamServiceImpl implements ExamService {
         log.info(userVos.toString());
         return userPageVo;
     }
+
     @Override
-    public QuestionPageVo getQuestionList(Integer pageNo, Integer pageSize, String userId) {
+    public ExamdataPageVo getStudentExamdata(Integer pageNo, Integer pageSize, String info) {
+        Sort sort = new Sort(Sort.Direction.DESC, "updateTime");
+        PageRequest pageRequest = PageRequest.of(pageNo - 1, pageSize, sort);
+        Page<Exam> pageExams = null;
+        if(StringUtils.isBlank(info)){
+            pageExams = examRepository.findAll(pageRequest);
+        }else{
+            pageExams = examRepository.findAllByExamName(pageRequest,info);
+        }
+        List<Exam> allExams = pageExams.getContent();
+        ExamdataPageVo examdataPageVo = new ExamdataPageVo();
+        // 设置页码
+        examdataPageVo.setPageNo(pageNo);
+        // 设置页大小
+        examdataPageVo.setPageSize(pageSize);
+        // 设置总共有多少个元素
+        examdataPageVo.setTotalCount(pageExams.getTotalElements());
+        // 设置一共有多少页
+        examdataPageVo.setTotalPage(pageExams.getTotalPages());
+
+        List<ExamdataVo> examdataVos = new ArrayList<>();
+
+        if(allExams!=null) {
+            for (int i = 0; i < allExams.size(); i++) {
+                ExamdataVo examdataVo = new ExamdataVo();
+                examdataVo.setScoresList(new ArrayList<Double>());
+                examdataVo.setNamesList(new ArrayList<String>());
+
+                Exam exam = allExams.get(i);
+                examdataVo.setExam(exam);
+
+                String examId = exam.getExamId();
+                List<ExamRecord> examRecords = examRecordRepository.findByExamId(examId);
+                log.info(examRecords.toString());
+
+                if (examRecords != null) {
+                    double minScore = 0;
+                    double maxScore =0;
+                    if(examRecords.size()!=0){
+                        minScore = examRecords.get(0).getExamJoinScore()*1.0;
+                        maxScore = examRecords.get(0).getExamJoinScore()*1.0;
+                    }
+                    double avgScore = 0;
+                    for (int j = 0; j < examRecords.size(); j++) {
+                        ExamRecord examRecord = examRecords.get(j);
+                        Boolean isEnd = examRecord.getExamIsEnd();
+                        if (isEnd) {
+                            String examJoinerId = examRecord.getExamJoinerId();
+
+                            double score = examRecord.getExamJoinScore()*1.0;
+                            minScore = score<minScore?score:minScore;
+                            maxScore = score>maxScore?score:maxScore;
+                            avgScore += score;
+                            examdataVo.getScoresList().add(score);
+                            User user = userRepository.findByUserId(examJoinerId);
+                            examdataVo.getNamesList().add(user.getUserNickname());
+                        } else {
+                            examdataVo.getNamesList().add(null);
+                            examdataVo.getScoresList().add(null);
+                        }
+                    }
+                    avgScore = avgScore==0?avgScore:avgScore/examRecords.size();
+                    examdataVo.setMinScore(minScore);
+                    examdataVo.setMaxScore(maxScore);
+                    examdataVo.setAvgScore(avgScore);
+                    examdataVo.setUserCount(examRecords.size()*1.0);
+                }
+                examdataVos.add(examdataVo);
+            }
+        }
+        examdataPageVo.setExamdataVoList(examdataVos);
+        return examdataPageVo;
+    }
+
+    @Override
+    public QuestionPageVo getQuestionList(Integer pageNo, Integer pageSize, String info, String userId) {
         log.info("正获取问题列表，userId为:"+userId);
+        log.info("正获取问题列表，name为:"+info);
         // 按照日期降序排列
         Sort sort = new Sort(Sort.Direction.DESC, "updateTime");
         // 构造分页请求,注意前端面页面的分页是从1开始的，后端是从0开始地，所以要减去1哈
@@ -110,25 +180,35 @@ public class ExamServiceImpl implements ExamService {
         Page<Question> questionPage = null;
         List<String> anserIds=new ArrayList<>();
         if(StringUtils.isBlank(userId)){
-            questionPage = questionRepository.findAll(pageRequest);
-        }else{
+            //没用户id，就获取全部
+            questionPage = StringUtils.isBlank(info)?questionRepository.findAll(pageRequest):questionRepository.findByQuestionName(pageRequest, info);
+        }else {
+            //有用户id,就获取用户的考试记录
             List<ExamRecord> record = examRecordRepository.findByExamJoinerId(userId);
-            List<String> ids=new ArrayList<>();
-            for(int i=0;i<record.size();i++){
-                String answerId=record.get(i).getAnswerOptionIds();
-                if(!StringUtils.isBlank(answerId)) {
+            List<String> ids = new ArrayList<>();
+            for (int i = 0; i < record.size(); i++) {
+                String answerId = record.get(i).getAnswerOptionIds();
+                if (!StringUtils.isBlank(answerId)) {
                     String[] str = answerId.split(Pattern.quote("$"));
                     for (String s : str) {
-                        if(s.indexOf("False")!=-1) {
+                        if (s.indexOf("False") != -1) {
                             log.info(s);
                             anserIds.add(s);
                             ids.add(s.substring(0, s.indexOf("@")));
                             log.info(s.substring(s.indexOf("_") + 1));
                         }
                     }
+                }else{
+                    ids.add("");
                 }
             }
-            questionPage = questionRepository.findByQuestionId(pageRequest, ids);
+            if (StringUtils.isBlank(info)) {
+                //根据问题id获取
+                questionPage = questionRepository.findByQuestionIds(pageRequest, ids);
+            } else {
+                //根据模糊查询
+                questionPage = questionRepository.findByQuestionNameAndId(pageRequest, info, ids);
+            }
         }
         QuestionPageVo questionPageVo = new QuestionPageVo();
         // 设置页码
@@ -214,6 +294,13 @@ public class ExamServiceImpl implements ExamService {
         questionPageVo.setQuestionVoList(questionVoList);
         questionPageVo.setAnswerIds(anserIds);
         return questionPageVo;
+    }
+
+    @Override
+    public Integer deleteQuestionById(String id) {
+        log.info(id);
+        Integer integer = questionRepository.deleteByQuestionId(id);
+        return integer;
     }
 
     @Override
@@ -320,39 +407,51 @@ public class ExamServiceImpl implements ExamService {
         }
         return str;
     }
-
+    //根据题目id获取题目信息
     @Override
     public QuestionDetailVo getQuestionDetail(String id) {
         Question question = questionRepository.findById(id).orElse(null);
         QuestionDetailVo questionDetailVo = new QuestionDetailVo();
-        questionDetailVo.setId(id);
-        questionDetailVo.setName(question.getQuestionName());
-        questionDetailVo.setDescription(question.getQuestionDescription());
-        // 问题类型，单选题/多选题/判断题
-        questionDetailVo.setType(
-                Objects.requireNonNull(
-                        questionTypeRepository.findById(
-                                question.getQuestionTypeId()
-                        ).orElse(null)
-                ).getQuestionTypeDescription()
-        );
-        // 获取当前问题的选项
-        String optionIdsStr = trimMiddleLine(question.getQuestionOptionIds());
-        String[] optionIds = optionIdsStr.split("-");
-        // 获取选项列表
-        List<QuestionOption> optionList = questionOptionRepository.findAllById(Arrays.asList(optionIds));
-        questionDetailVo.setOptions(optionList);
+        questionDetailVo.setName("题目已删除");
+        questionDetailVo.setDescription("题目已删除");
+        if(id!=null){
+            questionDetailVo.setId(id);
+        }
+        if(question!=null){
+            questionDetailVo.setName(question.getQuestionName());
+            questionDetailVo.setDescription(question.getQuestionDescription());
+            // 问题类型，单选题/多选题/判断题
+            questionDetailVo.setType(
+                    Objects.requireNonNull(
+                            questionTypeRepository.findById(
+                                    question.getQuestionTypeId()
+                            ).orElse(null)
+                    ).getQuestionTypeDescription()
+            );
+            // 获取当前问题的选项
+            String optionIdsStr = trimMiddleLine(question.getQuestionOptionIds());
+            String[] optionIds = optionIdsStr.split("-");
+            // 获取选项列表
+            List<QuestionOption> optionList = questionOptionRepository.findAllById(Arrays.asList(optionIds));
+            questionDetailVo.setOptions(optionList);
+        }
         return questionDetailVo;
     }
 
     @Override
-    public ExamPageVo getExamList(Integer pageNo, Integer pageSize,String id) {
+    public ExamPageVo getExamList(Integer pageNo, Integer pageSize, String info, String id) {
+        log.info("考试名称:"+info);
         // 获取考试列表
         // 按照日期降序排列
         Sort sort = new Sort(Sort.Direction.DESC, "updateTime");
         // 构造分页请求,注意前端面页面的分页是从1开始的，后端是从0开始地，所以要减去1哈
         PageRequest pageRequest = PageRequest.of(pageNo - 1, pageSize, sort);
-        Page<Exam> examPage = examRepository.findAllByExamCreatorId(pageRequest,id);
+        Page<Exam> examPage = null;
+        if(StringUtils.isBlank(info)) {
+            examPage = examRepository.findAllByExamCreatorId(pageRequest, id);
+        }else{
+            examPage = examRepository.findByExamName(pageRequest, info, id);
+        }
         ExamPageVo examPageVo = new ExamPageVo();
         // 设置页码
         examPageVo.setPageNo(pageNo);
@@ -424,6 +523,12 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    public Integer deleteExamById(String id) {
+        Integer integer = examRepository.deleteByExamId(id);
+        return integer;
+    }
+
+    @Override
     public ExamQuestionTypeVo getExamQuestionType() {
         ExamQuestionTypeVo examQuestionTypeVo = new ExamQuestionTypeVo();
         // 获取所有单选题列表，并赋值到ExamVo的属性ExamQuestionSelectVoRadioList上
@@ -457,9 +562,9 @@ public class ExamServiceImpl implements ExamService {
         examQuestionTypeVo.setExamQuestionSelectVoJudgeList(judgeQuestionVoList);
         return examQuestionTypeVo;
     }
-
+    //创建考试
     @Override
-    public Exam create(ExamCreateVo examCreateVo, String userId) {
+    public Exam create(ExamCreateVo examCreateVo, String userId){
         String examId = IdUtil.simpleUUID();
         if(!StringUtils.isBlank(examCreateVo.getExamId())){
             examId=examCreateVo.getExamId();
@@ -472,8 +577,9 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreateTime(new Date());
         exam.setUpdateTime(new Date());
         // Todo:这两个日志后面是要在前端传入的，这里暂时定为当前日期
-        exam.setExamStartDate(new Date());
-        exam.setExamEndDate(new Date());
+        exam.setExamStartDate(examCreateVo.getExamTime());
+        Date endDate = new Date(examCreateVo.getExamTime().getTime()+examCreateVo.getExamTimeLimit()*60000);
+        exam.setExamEndDate(endDate);
         String radioIdsStr = "";
         String checkIdsStr = "";
         String judgeIdsStr = "";
@@ -514,22 +620,10 @@ public class ExamServiceImpl implements ExamService {
         examRepository.save(exam);
         return exam;
     }
-
+    //获取用户考试列表
     @Override
     public List<ExamCardVo> getExamCardList(String userId) {
-//        List<ExamUser> examUser = getExamUser(userId);
-//        log.info(examUser.toString());
-//        log.info("正在获取将要考试的试题"+userId);
-//        String[] arr=new String[examUser.size()];
-//        for(int i=0;i<examUser.size();i++){
-//            arr[i]=examUser.get(i).getExamId();
-//        }
-        List<TeacherStudent> teacherStudentList = teacherStudentRepository.findByStudentId(userId);
-        String[] arr=new String[teacherStudentList.size()];
-        for(int i=0;i<teacherStudentList.size();i++){
-            arr[i]=teacherStudentList.get(i).getTeacherId();
-        }
-        List<Exam> examList = examRepository.findAllByExamCreatorId(Arrays.asList(arr));
+        List<Exam> examList = examRepository.findAll(new Sort(Sort.Direction.DESC,"examStartDate"));
         List<ExamCardVo> examCardVoList = new ArrayList<>();
         for (Exam exam : examList) {
             String examId = exam.getExamId();
@@ -564,20 +658,24 @@ public class ExamServiceImpl implements ExamService {
         examDetailVo.setJudgeIds(exam.getExamQuestionIdsJudge().split("-"));
         return examDetailVo;
     }
+    //考试列表，保存考试记录
     @Override
     public ExamRecord saveExamRecord(String userId, String examId, HashMap<String, List<String>> answersMap){
             ExamRecord record = examRecordRepository.findByExamIdAndExamJoinerId(examId, userId);
             if(record!=null){
+                //之前已经进入过考试，不是第一次考试
                 Date examJoinDate = record.getExamJoinDate();
                 String id = record.getExamId();
                 Exam exam = examRepository.findByExamId(id);
                 Integer minute = exam.getExamTimeLimit();
-                if(examJoinDate.getTime()+minute*60.0<=new Date().getTime()){
+                //判断考试时间是否结束，结束将isEnd设为true
+                if(examJoinDate.getTime()+minute*60000<=new Date().getTime()){
                     record.setExamIsEnd(true);
                     examRecordRepository.save(record);
                 }
                 return record;
             }
+            //是第一次进入考试
             //计算得分，记录本次考试结果，存到ExamRecord中
             ExamRecord examRecord = new ExamRecord();
             examRecord.setExamRecordId(IdUtil.simpleUUID());
@@ -598,6 +696,7 @@ public class ExamServiceImpl implements ExamService {
             examRecordRepository.save(examRecord);
             return examRecord;
     }
+    //交卷时用来判断答案
     @Override
     public ExamRecord judge(String userId, String examId,String recordId, HashMap<String, List<String>> answersMap) {
         // 开始考试判分啦~~~
@@ -695,22 +794,36 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public List<ExamRecordVo> getExamRecordList(String userId) {
+    public List<ExamRecordVo> getExamRecordList(String userId,String name) {
         // 获取指定用户下的考试记录列表
         List<ExamRecord> examRecordList = examRecordRepository.findByExamJoinerIdAndExamIsEndOrderByExamJoinDateDesc(userId,true);
         List<ExamRecordVo> examRecordVoList = new ArrayList<>();
         for (ExamRecord examRecord : examRecordList) {
             ExamRecordVo examRecordVo = new ExamRecordVo();
             Exam exam = examRepository.findById(examRecord.getExamId()).orElse(null);
-            examRecordVo.setExam(exam);
-            User user = userRepository.findById(userId).orElse(null);
-            examRecordVo.setUser(user);
-            examRecordVo.setExamRecord(examRecord);
-            examRecordVoList.add(examRecordVo);
+            if(exam!=null){
+                // 名字不为空，根据名字模糊查询
+                if(!StringUtils.isBlank(name)) {
+                    if (exam.getExamName().indexOf(name) != -1) {
+                        examRecordVo.setExam(exam);
+                        User user = userRepository.findById(userId).orElse(null);
+                        examRecordVo.setUser(user);
+                        examRecordVo.setExamRecord(examRecord);
+                        examRecordVoList.add(examRecordVo);
+                    }
+                }else{
+                    //直接显示全部
+                    examRecordVo.setExam(exam);
+                    User user = userRepository.findById(userId).orElse(null);
+                    examRecordVo.setUser(user);
+                    examRecordVo.setExamRecord(examRecord);
+                    examRecordVoList.add(examRecordVo);
+                }
+            }
         }
         return examRecordVoList;
     }
-
+    //获取考试列表进入的考试详情的信息
     @Override
     public RecordDetailVo getRecordDetail(String recordId) {
         // 获取考试详情的封装对象

@@ -179,7 +179,7 @@ export default {
         callback(new Error('密码强度不够'))
       }
     },
-
+    // 对密码的是否一致检查
     handlePasswordCheck (rule, value, callback) {
       const password = this.form.getFieldValue('password')
       console.log('value', value)
@@ -191,7 +191,7 @@ export default {
       }
       callback()
     },
-
+    // 对手机号检查
     handlePhoneCheck (rule, value, callback) {
       console.log('handlePhoneCheck, rule:', rule)
       console.log('handlePhoneCheck, value', value)
@@ -199,7 +199,7 @@ export default {
 
       callback()
     },
-
+    // 检查密码的级别
     handlePasswordInputClick () {
       if (!this.isMobile()) {
         this.state.passwordLevelChecked = true
@@ -207,7 +207,7 @@ export default {
       }
       this.state.passwordLevelChecked = false
     },
-
+    // 提交
     handleSubmit () {
       const { form: { validateFields }, $router, $message } = this
       validateFields({ force: true }, (err, values) => {

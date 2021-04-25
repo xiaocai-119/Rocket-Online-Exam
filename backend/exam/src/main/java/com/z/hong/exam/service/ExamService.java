@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 考试接口
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-28 08:05
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.service;
 
@@ -21,8 +19,13 @@ public interface ExamService {
      * @param pageSize 页面大小
      * @return 页面对象
      */
-    QuestionPageVo getQuestionList(Integer pageNo, Integer pageSize, String userId);
-
+    QuestionPageVo getQuestionList(Integer pageNo, Integer pageSize, String info, String userId);
+    /**
+     * 删除问题
+     * @param id 问题id
+     * @return
+     */
+    Integer deleteQuestionById(String id);
     /**
      * 根据前端传过来的问题实体更新问题和选项
      *
@@ -59,8 +62,15 @@ public interface ExamService {
      * @param pageSize 页面大小
      * @return 考试页面对象
      */
-    ExamPageVo getExamList(Integer pageNo, Integer pageSize, String id);
+    ExamPageVo getExamList(Integer pageNo, Integer pageSize, String info, String id);
 
+    /**
+     * 获取问题的列表
+     *
+     * @param id   id
+     * @return
+     */
+    Integer deleteExamById(String id);
     /**
      * 获取所有问题的下拉列表，方便前端创建考试时筛选
      *
@@ -75,7 +85,7 @@ public interface ExamService {
      * @param userId       用户id
      * @return 创建好的考试
      */
-    Exam create(ExamCreateVo examCreateVo, String userId);
+    Exam create(ExamCreateVo examCreateVo, String userId) throws Exception;
     ExamRecord getExamReacord(String id);
     /**
      * 获取考试卡片列表
@@ -108,7 +118,7 @@ public interface ExamService {
      * @param userId 用户id
      * @return 该用户的所有考试记录
      */
-    List<ExamRecordVo> getExamRecordList(String userId);
+    List<ExamRecordVo> getExamRecordList(String userId,String name);
 
     /**
      * 获取指定某次考试记录的详情
@@ -129,7 +139,15 @@ public interface ExamService {
      * @param pageSize 页面大小
      * @return 页面对象
      */
-    UserPageVo getStudentList(Integer pageNo, Integer pageSize,String tId);
+    UserPageVo getStudentList(Integer pageNo, Integer pageSize, String info);
+    /**
+     * 获取教师的对应的学生
+     *
+     * @param pageNo   页码编号
+     * @param pageSize 页面大小
+     * @return 页面对象
+     */
+    ExamdataPageVo getStudentExamdata(Integer pageNo, Integer pageSize, String info);
 
     ExamRecord saveExamRecord(String userId, String examId, HashMap<String, List<String>> answersMap);
 }

@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 问题类型的的枚举
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-18 12:00
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.enums;
 

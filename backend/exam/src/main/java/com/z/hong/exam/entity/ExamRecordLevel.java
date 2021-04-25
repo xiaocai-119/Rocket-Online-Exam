@@ -1,8 +1,7 @@
 /***********************************************************
  * @Description : 考试得分级别
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019/5/14 07:44
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
+ * @date        : 2021-03-01
  ***********************************************************/
 package com.z.hong.exam.entity;
 

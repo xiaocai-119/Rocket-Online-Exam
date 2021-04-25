@@ -122,6 +122,7 @@ export default {
           // that.time = new Date(res.data.examRecord.examJoinDate).getTime()
           that.examRecordDeail = res.data.examRecord
           if (res.data.examRecord.examIsEnd) {
+            console.log(res.data.examRecord.examIsEnd)
             this.$notification.success({
               message: '考试已结束！'
             })
@@ -137,11 +138,11 @@ export default {
                   // 赋值考试对象
                   that.examDetail = res.data
                   exam = res.data
-                  console.log(examRecord)
-                  console.log(JSON.stringify(examRecord) !== '{}')
-                  console.log(JSON.stringify(exam) !== '{}')
+                  console.log(this.examRecordDeail)
+                  console.log(this.examDetail)
                   if (JSON.stringify(exam) !== '{}' && JSON.stringify(examRecord) !== '{}') {
                     const time = new Date(this.examRecordDeail.examJoinDate).getTime() + this.examDetail.exam.examTimeLimit * 60000 - new Date().getTime()
+                    console.log(time)
                     console.log('时间')
                     if (time <= 0) {
                       this.$notification.success({
@@ -164,7 +165,7 @@ export default {
           }
         } else {
           this.$notification.error({
-            message: '获取考试记录详情失败',
+            message: '获取考试详情失败',
             description: res.msg
           })
         }

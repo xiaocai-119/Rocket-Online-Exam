@@ -1,12 +1,14 @@
 /***********************************************************
  * @Description : 注册接口参数
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-16 23:40
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.dto;
 
 import lombok.Data;
+
+/**
+ * 封装注册，数据传输对象
+ */
 
 @Data
 public class RegisterDTO {

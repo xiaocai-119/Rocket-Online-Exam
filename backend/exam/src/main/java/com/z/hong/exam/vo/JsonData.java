@@ -6,12 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/**
- * 功能描述：工具类
- *
- * @author liangshanguang
- * @date 2019-05-22 08:11
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

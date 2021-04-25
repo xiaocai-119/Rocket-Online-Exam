@@ -1,13 +1,17 @@
 /***********************************************************
  * @Description : 用户表的操作类
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-14 08:30
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.repository;
 
+import com.z.hong.exam.entity.Question;
 import com.z.hong.exam.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, String> {
     /**
@@ -26,4 +30,7 @@ public interface UserRepository extends JpaRepository<User, String> {
      */
     User findByUserEmail(String email);
     User findByUserId(String id);
+    List<User> findAllByUserRoleId(Integer id);
+    @Query("select u from User u where u.userUsername like %?1% and u.userRoleId = 3")
+    List<User> findByUserName(String name);
 }

@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 允许跨域访问
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-17 00:11
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.config;
 

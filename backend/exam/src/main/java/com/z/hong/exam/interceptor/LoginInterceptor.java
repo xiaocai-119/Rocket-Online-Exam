@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 登录拦截器，主要用于校验Token
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-22 07:35
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.interceptor;
 
@@ -10,6 +8,7 @@ import com.google.gson.Gson;
 import com.z.hong.exam.utils.JwtUtils;
 import com.z.hong.exam.vo.JsonData;
 import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -19,15 +18,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 
 /**
- * https://stackoverflow.com/questions/43591582/application-properties-value-in-spring-boot-interceptor
  *
- * @author liangshanguang
+ * @author czy
  */
+@Slf4j
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
     /**
-     * 有上面的@Component才能使得这个属性能从pplication.yml中取得拦截器的值
+     * 不需要鉴权的url
      */
     @Value("${interceptors.auth-ignore-uris}")
     private String authIgnoreUris;
@@ -43,10 +42,10 @@ public class LoginInterceptor implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        System.out.println("进入拦截器啦！");
+        log.info("进入拦截器啦！");
         String uri = request.getRequestURI();
-        System.out.println(uri);
-        System.out.println("无需拦截的接口路径：" + authIgnoreUris);
+        log.info(uri);
+        log.info("无需拦截的接口路径：" + authIgnoreUris);
         String[] authIgnoreUriArr = authIgnoreUris.split(",");
         // 登录和注册接口不需要进行token拦截和校验
         for (String authIgnoreUri : authIgnoreUriArr) {

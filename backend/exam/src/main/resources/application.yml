@@ -7,9 +7,15 @@ user:
     username: user
     # 用户的默认头像
     avatar: http://d.lanrentuku.com/down/png/1904/business_avatar/8_avatar_2754583.png
-
+#tomcat优化 默认是200
 server:
   port: 9527 # 这个端口要和vue项目里vue.config.js里的devServer里面配置的相同
+  tomcat:
+    max-threads: 400
+    accept-count: 200
+    min-spare-threads: 20
+    accesslog:
+      enabled: true
 
 spring:
   application:
@@ -40,3 +46,4 @@ interceptors:
 logging:
   level:
     org.hibernate.type.descriptor.sql.BasicBinder: off
+

@@ -10,7 +10,12 @@ export function getQuestionList (parameter, userId) {
     params: parameter
   })
 }
-
+export function deleteQuestionById (id) {
+  return axios({
+    url: api.ExamQuestionDelete + '?id=' + id,
+    method: 'get'
+  })
+}
 export function questionUpdate (parameter) {
   console.log(parameter)
   return axios({
@@ -46,11 +51,35 @@ export function getExamList (parameter, id) {
     params: parameter
   })
 }
-export function getExamStudentList (parameter, userId) {
+export function deleteExamById (id) {
   return axios({
-    url: api.ExamStudentList + '?userId=' + userId,
+    url: api.ExamDelete + '?id=' + id,
+    method: 'get'
+  })
+}
+// 获取考生列表
+export function getExamStudentList (parameter) {
+  return axios({
+    url: api.ExamStudentList,
     method: 'get',
     params: parameter
+  })
+}
+// 获取考生考试数据
+export function getExamStudentExamdata (parameter) {
+  return axios({
+    url: api.ExamStudentExamdata,
+    method: 'get',
+    params: parameter
+  })
+}
+// 导出数据
+export function ExamdataOutput (parameter) {
+  return axios({
+    url: api.ExamdataOutput,
+    method: 'post',
+    data: parameter,
+    responseType: 'blob'
   })
 }
 // 获取所有问题，按照单选、多选和判断进行分类
@@ -144,10 +173,11 @@ export function FinishUpdateExam (recordId, answersMap) {
   })
 }
 
-export function getExamRecordList () {
+export function getExamRecordList (parameter) {
   return axios({
     url: api.ExamRecordList,
     method: 'get',
+    params: parameter,
     headers: {
       'Content-Type': 'application/json;charset=UTF-8'
     }

@@ -4,9 +4,12 @@
       style="margin-top: 24px"
       :bordered="false"
       title="参加过的考试">
-
       <div slot="extra">
-        <a-input-search style="margin-left: 16px; width: 272px;"/>
+
+        <a-input-search
+          style="margin-left: 16px; width: 272px"
+          @search="onSearch">
+        </a-input-search>
       </div>
       <a-list size="large">
         <a-list-item :key="index" v-for="(item, index) in data">
@@ -69,11 +72,33 @@ export default {
       })
       // 和点击考试卡片效果一样，跳转到考试页面，里面有所有题目的情况，相当于就是详情了
       window.open(routeUrl.href, '_blank')
+    },
+    onSearch (value) {
+      const param = { 'name': value }
+      console.log(param)
+      getExamRecordList(param).then(res => {
+        if (res.code === 0) {
+          this.data = res.data
+          console.log(res.data)
+        } else {
+          this.$notification.error({
+            message: '获取考试记录失败',
+            description: res.msg
+          })
+        }
+      }).catch(err => {
+        // 失败就弹出警告消息
+        this.$notification.error({
+          message: '获取考试记录失败',
+          description: err.message
+        })
+      })
     }
   },
   mounted () {
+    const param = { 'name': '' }
     // 从后端数据获取考试列表，适配前端卡片
-    getExamRecordList().then(res => {
+    getExamRecordList(param).then(res => {
       if (res.code === 0) {
         this.data = res.data
       } else {

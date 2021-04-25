@@ -1,14 +1,12 @@
 /***********************************************************
  * @Description : 考试的前端展示类。examCreatorId可从token中获取
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-06-17 08:14
- * @email       : liangshanguang2@gmail.com
  ***********************************************************/
 package com.z.hong.exam.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -32,7 +30,11 @@ public class ExamCreateVo {
     @JsonProperty("elapse")
     private Integer examTimeLimit;
 
-
+    /**
+     * 考试时长，单位分钟
+     */
+    @JsonProperty("time")
+    private Date examTime;
     /**
      * 单选题
      */

@@ -24,7 +24,7 @@
           :defaultOpenKeys="['question_radio', 'question_check', 'question_judge']"
           :style="{ height: '100%', borderRight: 0 }"
         >
-          <a-sub-menu key="question_radio">
+          <a-sub-menu key="question_radio" v-if="examDetail.radioIds!=''" >
             <span slot="title" v-if="examDetail.exam"><a-icon type="check-circle" theme="twoTone"/>单选题(每题{{ examDetail.exam.examScoreRadio }}分)</span>
             <a-menu-item v-for="(item, index) in examDetail.radioIds" :key="item" @click="getQuestionDetail(item)">
               <a-icon type="check" v-if="resultsMap.get(item)==='True'"/>
@@ -32,7 +32,7 @@
               题目{{ index + 1 }}
             </a-menu-item>
           </a-sub-menu>
-          <a-sub-menu key="question_check">
+          <a-sub-menu key="question_check" v-if="examDetail.checkIds!=''" >
             <span slot="title" v-if="examDetail.exam"><a-icon type="check-square" theme="twoTone"/>多选题(每题{{ examDetail.exam.examScoreCheck }}分)</span>
             <a-menu-item v-for="(item, index) in examDetail.checkIds" :key="item" @click="getQuestionDetail(item)">
               <a-icon type="check" v-if="resultsMap.get(item)==='True'"/>
@@ -40,7 +40,7 @@
               题目{{ index + 1 }}
             </a-menu-item>
           </a-sub-menu>
-          <a-sub-menu key="question_judge">
+          <a-sub-menu key="question_judge" v-if="examDetail.judgeIds!=''" >
             <span slot="title" v-if="examDetail.exam"><a-icon type="like" theme="twoTone"/>判断题(每题{{ examDetail.exam.examScoreJudge }}分)</span>
             <a-menu-item v-for="(item, index) in examDetail.judgeIds" :key="item" @click="getQuestionDetail(item)">
               <a-icon type="check" v-if="resultsMap.get(item)==='True'"/>

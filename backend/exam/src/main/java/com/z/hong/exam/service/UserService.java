@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 用户接口
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-17 08:02
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.service;
 

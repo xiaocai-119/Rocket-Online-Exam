@@ -4,7 +4,6 @@ const api = {
   ForgePassword: '/auth/forge-password',
   Register: '/auth/register',
   twoStepCode: '/auth/2step-code',
-  SendSms: '/account/sms',
   SendSmsErr: '/account/sms_err',
   // get my info
   UserInfo: '/user/info',
@@ -16,10 +15,14 @@ const api = {
   // 考试的接口
   ExamQuestionList: '/exam/question/list',
   ExamStudentList: '/exam/student/list',
+  ExamdataOutput: '/exam/output',
+  ExamStudentExamdata: '/exam/student/examdata',
+  ExamQuestionDelete: '/exam/question/delete',
   ExamQuestionUpdate: '/exam/question/update',
   ExamQuestionSelection: '/exam/question/selection',
   ExamQuestionCreate: '/exam/question/create',
   ExamList: '/exam/list',
+  ExamDelete: '/exam/delete',
   // 获取问题列表，按照单选、多选和判断进行分类
   ExamQuestionTypeList: '/exam/question/type/list',
   ExamCreate: '/exam/create',

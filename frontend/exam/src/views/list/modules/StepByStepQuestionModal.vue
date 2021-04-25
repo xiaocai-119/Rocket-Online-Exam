@@ -158,6 +158,7 @@ const stepForms = [
 
 export default {
   name: 'StepByStepQuestionModal',
+  inject: ['reload'],
   data () {
     return {
       labelCol: {
@@ -274,6 +275,7 @@ export default {
               })
               // 关闭弹出框
               this.visible = false
+              this.reload()
             }
           }).catch(err => {
             // 失败就弹出警告消息

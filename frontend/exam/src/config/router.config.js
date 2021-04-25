@@ -98,7 +98,7 @@ export const asyncRouterMap = [
         redirect: '/list/student-record-list',
         component: PageView,
         hideChildrenInMenu: true,
-        meta: { title: '学生管理', keepAlive: true, icon: mine, permission: ['student-record-list'] },
+        meta: { title: '考生列表', keepAlive: true, icon: mine, permission: ['student-record-list'] },
         children: [
           {
             path: '/list/student-record-list',
@@ -122,6 +122,23 @@ export const asyncRouterMap = [
             name: 'StudentRecordListWrapper',
             component: () => import('../views/list/ExamErrorQuestion'),
             meta: { title: '', keepAlive: false, permission: ['exam-error-question'] }
+          }
+        ]
+      },
+      // 考试统计
+      {
+        path: '/exam-statistics',
+        name: 'exam-statistics',
+        redirect: '/list/exam-statistics',
+        component: PageView,
+        hideChildrenInMenu: true,
+        meta: { title: '考试统计', keepAlive: true, icon: mine, permission: ['exam-statistics'] },
+        children: [
+          {
+            path: '/list/exam-statistics',
+            name: 'StudentRecordListWrapper',
+            component: () => import('../views/list/ExamStatistics'),
+            meta: { title: '', keepAlive: false, permission: ['exam-statistics'] }
           }
         ]
       },
@@ -211,18 +228,18 @@ export const constantRouterMap = [
 
   {
     path: '/404',
-    component: () => import(/* webpackChunkName: "fail" */ '../views/exception/404')
+    component: () => import('../views/exception/404')
   },
   {
     path: '/exam/:id',
-    component: () => import(/* webpackChunkName: "fail" */ '../views/list/ExamDetail')
+    component: () => import('../views/list/ExamDetail')
   },
   {
     path: '/exam/record/:exam_id',
-    component: () => import(/* webpackChunkName: "fail" */ '../views/list/Exam')
+    component: () => import('../views/list/Exam')
   },
   {
     path: '/exam/record/:exam_id/:record_id',
-    component: () => import(/* webpackChunkName: "fail" */ '../views/list/ExamRecordDetail')
+    component: () => import('../views/list/ExamRecordDetail')
   }
 ]

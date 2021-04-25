@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : Action的前端展示类
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-26 13:50
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.vo;
 

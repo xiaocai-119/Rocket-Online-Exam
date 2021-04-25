@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 考试记录VO
- * @author      : 梁山广(Liang Shan Guang)
- * @date        : 2019/10/25 7:42
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.vo;
 

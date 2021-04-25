@@ -35,6 +35,21 @@
             分钟
           </a-form-item>
           <a-form-item
+            label="考试时间"
+            :labelCol="labelCol"
+            :wrapperCol="wrapperCol"
+          >
+            <a-date-picker
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              placeholder="Select Time"
+              @change="onChange"
+              @ok="onOk"
+              :disabledDate="disabledDate2"
+              :disabled-time="disabledDateTime"
+              v-decorator="['time', {rules: [{ required: true}]}]"/>
+          </a-form-item>
+          <a-form-item
             label="考试简述"
             :labelCol="labelCol"
             :wrapperCol="wrapperCol"
@@ -42,7 +57,7 @@
             <a-textarea :rows="2" v-decorator="['desc', {rules: [{required: true}]}]"></a-textarea>
           </a-form-item>
           <a-form-item
-            label="考试小图"
+            label="图标url"
             :labelCol="labelCol"
             :wrapperCol="wrapperCol"
           >
@@ -172,17 +187,21 @@
 <script>
 // import pick from 'lodash.pick'
 import { getExamQuestionTypeList, examCreate } from '../../../api/exam'
+import moment from 'moment'
+import 'moment/locale/zh-cn'
 
 const stepForms = [
-  ['name', 'elapse', 'desc', 'avatar'],
+  ['name', 'elapse', 'time', 'desc', 'avatar'],
   ['radioScore', 'checkScore', 'judgeScore'],
   ['option']
 ]
 
 export default {
   name: 'StepByStepExamModal',
+  inject: ['reload'],
   data () {
     return {
+      moment,
       labelCol: {
         xs: { span: 24 },
         sm: { span: 7 }
@@ -209,6 +228,42 @@ export default {
     }
   },
   methods: {
+    range (start, end) {
+      const result = []
+      for (let i = start; i < end; i++) {
+        result.push(i)
+      }
+      return result
+    },
+    disabledDateTime (current) {
+      console.log(current)
+      console.log(new Date(current.format('YYYY-MM-DD HH:mm:ss')).getDate())
+      if (new Date(current.format('YYYY-MM-DD HH:mm:ss')).getDate() <= new Date().getDate()) {
+        const disabledTime = {
+          disabledHours: () => this.range(0, 24).splice(0, new Date().getHours()),
+          disabledMinutes: () => this.range(0, 60).splice(0, new Date().getMinutes() - 1)
+        }
+        return disabledTime
+      }
+    },
+    disabledDate2 (current) {
+      // const moment2 = moment(new Date(), 'YYYY-MM-DD')
+      // return current && current <= moment().endOf('day')
+      // return current < moment2.subtract(1, 'day')
+      return (
+        current &&
+        (current.clone().startOf('day') <= moment().add(-1, 'day') ||
+          current.clone().endOf('day') >= moment().add(9, 'day'))
+      )
+    },
+    onChange (value, dateString) {
+      console.log('Selected Time: ', value)
+      console.log('Formatted Selected Time: ', dateString)
+    },
+    onOk (value) {
+      console.log(this.form.getFieldValue('time'))
+      console.log('onOk: ', value)
+    },
     create () {
       this.visible = true
       // 从后端数据获取单选题、多选题和判断题的列表
@@ -233,10 +288,20 @@ export default {
         })
       })
     },
+    // 编辑考试
     update (record) {
       this.record = record
+      if (new Date(record.startDate).getTime() < new Date().getTime()) {
+        this.$notification.error({
+          message: '无法更新',
+          description: '考试已开始了'
+        })
+        this.visible = false
+        return
+      }
       this.visible = true
-      // 从后端数据获取单选题、多选题和判断题的列表
+      console.log(this.form.getFieldValue('time'))
+      // 从后端数据获取单选题、多选题和判断题的列表,赋值到表单
       getExamQuestionTypeList().then(res => {
         console.log(res)
         console.log(record)
@@ -266,11 +331,15 @@ export default {
           this.handleJudgeChange(judgeInit)
           this.form.setFieldsValue({ 'name': record.name, 'elapse': record.elapse, 'desc': record.desc, 'avatar': record.avatar })
           this.form.setFieldsValue({ 'radioScore': record.radioScore, 'checkScore': record.checkScore, 'judgeScore': record.judgeScore })
+          var now2 = record.startDate
+          var moment2 = moment(now2, 'YYYY-MM-DD HH:mm:ss')
+          this.form.setFieldsValue({ 'time': moment2 })
         } else {
           this.$notification.error({
             message: '获取问题列表失败',
             description: res.msg
           })
+          this.visible = false
         }
       }).catch(err => {
         // 失败就弹出警告消息
@@ -278,6 +347,7 @@ export default {
           message: '获取问题列表失败',
           description: err.message
         })
+        this.visible = false
       })
     },
     popupScroll () {
@@ -306,11 +376,12 @@ export default {
         values.checks = this.checks
         values.judges = this.judges
 
-        var msg = '创建成功'
-        var id = ''
+        let msg = '创建成功'
+        let id = ''
         console.log(this.radios)
         console.log(this.form.getFieldValue('radioSelect'))
-        if (this.record.id !== null || this.record.id !== undefined) {
+        console.log(this.record.id)
+        if (this.record.id !== undefined) {
           id = this.record.id
           msg = '更改成功'
         }
@@ -329,7 +400,13 @@ export default {
                 description: msg
               })
               // 关闭弹出框
+              this.reload()
               this.visible = false
+            } else {
+              this.$notification.error({
+                message: res.msg,
+                description: res.msg
+              })
             }
           }).catch(err => {
             // 失败就弹出警告消息

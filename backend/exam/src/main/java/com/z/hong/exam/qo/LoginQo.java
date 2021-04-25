@@ -1,8 +1,6 @@
 /***********************************************************
  * @Description : 登录的查询参数
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-19 20:18
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.qo;
 
@@ -10,6 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ *简单无规则 登录 对象（pojo）
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

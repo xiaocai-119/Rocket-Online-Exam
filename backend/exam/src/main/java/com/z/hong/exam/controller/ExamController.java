@@ -1,14 +1,13 @@
 /***********************************************************
  * @Description : 考试服务
- * @author      : 梁山广(Laing Shan Guang)
- * @date        : 2019-05-28 08:04
- * @email       : liangshanguang2@gmail.com
+ * @author      : 蔡镇宇czy
  ***********************************************************/
 package com.z.hong.exam.controller;
 
 import com.z.hong.exam.entity.Exam;
 import com.z.hong.exam.entity.ExamRecord;
 import com.z.hong.exam.service.ExamService;
+import com.z.hong.exam.utils.BigExportExcelUtil;
 import com.z.hong.exam.vo.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,18 +35,36 @@ public class ExamController {
 
     @GetMapping("/question/list")
     @ApiOperation("获取问题的列表")
-    ResultVO<QuestionPageVo> getQuestionList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("userId") String userId) {
+    ResultVO<QuestionPageVo> getQuestionList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("info") String info, @RequestParam("userId") String userId) {
         ResultVO<QuestionPageVo> resultVO;
         try {
-            QuestionPageVo questionPageVo = examService.getQuestionList(pageNo, pageSize, userId);
+            QuestionPageVo questionPageVo = examService.getQuestionList(pageNo, pageSize, info, userId);
+            log.info("getQuestionList："+"pageNo:"+pageNo+"pageSize:"+pageSize+"info:"+info+"userId"+userId);
             resultVO = new ResultVO<>(0, "获取问题列表成功", questionPageVo);
+            log.info("getQuestionList："+resultVO);
         } catch (Exception e) {
             e.printStackTrace();
             resultVO = new ResultVO<>(-1, "获取问题列表失败", null);
         }
         return resultVO;
     }
-
+    @GetMapping("/question/delete")
+    @ApiOperation("删除某个问题")
+    ResultVO<QuestionPageVo> QuestionDelete( @RequestParam("id") String id) {
+        ResultVO<QuestionPageVo> resultVO;
+        try {
+            Integer count = examService.deleteQuestionById(id);
+            if(count >= 1){
+                resultVO = new ResultVO<>(0, "删除成功", null);
+            }else{
+                resultVO = new ResultVO<>(0, "删除失败", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultVO = new ResultVO<>(-1, "删除失败", null);
+        }
+        return resultVO;
+    }
     @PostMapping("/question/update")
     @ApiOperation("更新问题")
     ResultVO<String> questionUpdate(@RequestBody QuestionVo questionVo) {
@@ -93,11 +113,12 @@ public class ExamController {
     @ApiOperation("根据问题的id获取问题的详细信息")
     ResultVO<QuestionDetailVo> getQuestionDetail(@PathVariable String id) {
         //  根据问题id获取问题的详细信息
-        System.out.println(id);
+        log.info("getQuestionDetail："+id);
         ResultVO<QuestionDetailVo> resultVO;
         try {
             QuestionDetailVo questionDetailVo = examService.getQuestionDetail(id);
             resultVO = new ResultVO<>(0, "获取问题详情成功", questionDetailVo);
+            log.info(resultVO.toString());
         } catch (Exception e) {
             e.printStackTrace();
             resultVO = new ResultVO<>(-1, "获取问题详情失败", null);
@@ -106,34 +127,106 @@ public class ExamController {
     }
 
     @GetMapping("/list")
-    @ApiOperation("获取考试列表")
-    ResultVO<ExamPageVo> getExamList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("id") String id) {
+    @ApiOperation("获取考试管理考试列表")
+    ResultVO<ExamPageVo> getExamList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("info") String info, @RequestParam("id") String id) {
         log.info("获取创建的考试列表,id="+id);
         // 需要拼接前端需要的考试列表对象
         ResultVO<ExamPageVo> resultVO;
         try {
-            ExamPageVo examPageVo = examService.getExamList(pageNo, pageSize, id);
+            ExamPageVo examPageVo = examService.getExamList(pageNo, pageSize, info, id);
             resultVO = new ResultVO<>(0, "获取考试列表成功", examPageVo);
         } catch (Exception e) {
             e.printStackTrace();
             resultVO = new ResultVO<>(-1, "获取考试列表失败", null);
         }
+        log.info(resultVO.toString());
+        return resultVO;
+    }
+    @GetMapping("/delete")
+    @ApiOperation("根据id删除考试")
+    ResultVO<ExamPageVo> deleteExamById(@RequestParam("id") String id) {
+        log.info("deleteExamById,id="+id);
+        // 需要拼接前端需要的考试列表对象
+        ResultVO<ExamPageVo> resultVO;
+        try {
+            Integer count = examService.deleteExamById(id);
+            if(count>=1){
+                resultVO = new ResultVO<>(0, "删除成功", null);
+            }else{
+                resultVO = new ResultVO<>(-1, "删除失败", null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultVO = new ResultVO<>(-1, "删除失败", null);
+        }
+        log.info("删除考试,id="+resultVO);
         return resultVO;
     }
     @GetMapping("/student/list")
     @ApiOperation("获取学生列表")
-    ResultVO<UserPageVo> getStudentList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize,@RequestParam("userId") String userId) {
+    ResultVO<UserPageVo> getStudentList(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("info") String info) {
         // 需要拼接前端需要的考试列表对象
         ResultVO<UserPageVo> resultVO;
         try {
-            UserPageVo userPageVo = examService.getStudentList(pageNo, pageSize, userId);
-            log.info(userPageVo.toString());
+            log.info("getStudentList,id="+"pageNo:"+pageNo+"pageSize:"+pageSize+"info:"+info);
+            UserPageVo userPageVo = examService.getStudentList(pageNo, pageSize, info);
             resultVO = new ResultVO<>(0, "获取考试列表成功", userPageVo);
         } catch (Exception e) {
             e.printStackTrace();
             resultVO = new ResultVO<>(-1, "获取考试列表失败", null);
         }
+        log.info(resultVO.toString());
         return resultVO;
+    }
+    @GetMapping("/student/examdata")
+    @ApiOperation("获取学生考试信息")
+    ResultVO<ExamdataPageVo> getStudentExamdata(@RequestParam("pageNo") Integer pageNo, @RequestParam("pageSize") Integer pageSize, @RequestParam("info") String info) {
+        // 需要拼接前端需要的考试列表对象
+        ResultVO<ExamdataPageVo> resultVO;
+        try {
+            ExamdataPageVo examdataPageVo = examService.getStudentExamdata(pageNo, pageSize, info);
+            log.info(examdataPageVo.toString());
+            resultVO = new ResultVO<>(0, "获取考试统计数据成功", examdataPageVo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultVO = new ResultVO<>(-1, "获取考试统计数据失败", null);
+        }
+        return resultVO;
+    }
+    @PostMapping("/output")
+    @ApiOperation("导出数据")
+    void outputExamdata(@RequestBody ExamdataVo examdataVo,  HttpServletResponse response) {
+
+        try {
+            log.info(examdataVo.toString());
+            String examName = examdataVo.getExam().getExamName();
+            List<Double> scoresList = examdataVo.getScoresList();
+            List<String> namesList = examdataVo.getNamesList();
+            String title ="姓名,分数";
+            String[] rowsName = title.split(",");
+            List<Object[]> dataList = new ArrayList<Object[]>();
+            for(int i=0;i<scoresList.size();i++){
+                Object[] objs = new Object[2];
+                objs[0]=namesList.get(i);
+                objs[1]=scoresList.get(i);
+                dataList.add(objs);
+            }
+            Double avgScore = examdataVo.getAvgScore();
+            Double minScore = examdataVo.getMinScore();
+            Double maxScore = examdataVo.getMaxScore();
+            //附加的一些数据
+            String[] info=new String[]{"最低分："+minScore,"最高分："+maxScore,"平均分："+avgScore};
+            //导出数据
+            BigExportExcelUtil ex = new BigExportExcelUtil(examName, rowsName, dataList);
+            OutputStream output = response.getOutputStream();
+            response.setHeader("Content-Disposition", "attachment;fileName=" + examName + ".xlsx");
+            //自动识别内容 multipart/form-data
+            response.setContentType("application/vnd.ms-excel");
+            ex.export(output,info);
+            output.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @GetMapping("/question/type/list")
     @ApiOperation("获取问题列表，按照单选、多选和判断题分类返回")
@@ -168,7 +261,7 @@ public class ExamController {
     }
 
     @GetMapping("/card/list")
-    @ApiOperation("获取考试列表，适配前端卡片列表")
+    @ApiOperation("获取用户考试列表，适配前端卡片列表")
     ResultVO<List<ExamCardVo>> getExamCardList(@RequestParam("userId") String userId) {
 
         // 获取考试列表卡片
@@ -196,6 +289,7 @@ public class ExamController {
         }
         return resultVO;
     }
+    //根据考试记录获取考试信息
     @GetMapping("/detail/{id}")
     @ApiOperation("根据考试的id，获取考试详情")
     ResultVO<ExamDetailVo> getExamDetail(@PathVariable String id) {
@@ -210,7 +304,7 @@ public class ExamController {
         }
         return resultVO;
     }
-
+    //从考试列表进入考试
     @PostMapping("/finish/{examId}")
     @ApiOperation("根据用户提交的答案对指定id的考试判分")
     ResultVO<ExamRecord> finishExam(@PathVariable String examId, @RequestBody HashMap<String, List<String>> answersMap, HttpServletRequest request) {
@@ -229,6 +323,7 @@ public class ExamController {
         }
         return resultVO;
     }
+    //交卷
     @PostMapping("/finish/update/{recordId}")
     @ApiOperation("根据用户提交的答案对指定id的考试判分")
     ResultVO<ExamRecord> finishUpdateExam(@PathVariable String recordId, @RequestBody HashMap<String, List<String>> answersMap, HttpServletRequest request) {
@@ -252,14 +347,14 @@ public class ExamController {
 
     @GetMapping("/record/list")
     @ApiOperation("获取当前用户的考试记录")
-    ResultVO<List<ExamRecordVo>> getExamRecordList(HttpServletRequest request) {
-        log.info("获取当前用户的考试记录");
+    ResultVO<List<ExamRecordVo>> getExamRecordList(HttpServletRequest request,@RequestParam("name") String name) {
         ResultVO<List<ExamRecordVo>> resultVO;
         try {
             // 拦截器里设置上的用户id
             String userId = (String) request.getAttribute("user_id");
+            log.info("getExamRecordList,name="+name+",userId="+userId);
             // 下面根据用户账号拿到他(她所有的考试信息)，注意要用VO封装下
-            List<ExamRecordVo> examRecordVoList = examService.getExamRecordList(userId);
+            List<ExamRecordVo> examRecordVoList = examService.getExamRecordList(userId,name);
             log.info(examRecordVoList.toString());
             resultVO = new ResultVO<>(0, "获取考试记录成功", examRecordVoList);
         } catch (Exception e) {
@@ -268,7 +363,7 @@ public class ExamController {
         }
         return resultVO;
     }
-
+    //考试列表进入考试的页面，获取考试详情信息
     @GetMapping("/record/detail/{recordId}")
     @ApiOperation("根据考试记录id获取考试记录详情")
     ResultVO<RecordDetailVo> getExamRecordDetail(@PathVariable String recordId) {
